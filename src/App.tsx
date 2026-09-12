@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { User } from 'firebase/auth';
 import { Header } from './components/Header';
 import { WeeklyGameInsights } from './components/WeeklyGameInsights';
 import { BetTracker } from './components/BetTracker';
@@ -7,9 +8,20 @@ import { PlayerPropFinder } from './components/PlayerPropFinder';
 import { AnalyticsCharts } from './components/AnalyticsCharts';
 import { PFFTeamsMatrix } from './components/PFFTeamsMatrix';
 import { AddBetModal } from './components/AddBetModal';
+import { AuthModal } from './components/AuthModal';
 import { Bet, BetStatus, BankrollSummary, NFLWeeklyGame } from './types';
 import { INITIAL_SEED_BETS } from './data/pffData';
 import { INITIAL_WEEKLY_SCHEDULE } from './data/weeklyScheduleData';
+import { 
+  auth, 
+  subscribeToBets, 
+  syncBetToCloud, 
+  deleteBetFromCloud, 
+  saveCloudSettings, 
+  fetchCloudSettings,
+  batchUploadLocalBets
+} from './lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { 
   calculateBankrollSummary, 
   calculateProfit, 
@@ -24,6 +36,11 @@ const STORAGE_KEY_GAMES = 'pff_sharp_weekly_games_2026';
 export default function App() {
   const [currentTab, setCurrentTab] = useState<'weekly' | 'tracker' | 'predict' | 'props' | 'analytics' | 'teams'>('weekly');
   
+  // User Authentication State
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isCloudSyncActive, setIsCloudSyncActive] = useState<boolean>(false);
+
   // Weekly Games state with auto-stats update and persistence
   const [weeklyGames, setWeeklyGames] = useState<NFLWeeklyGame[]>(() => {
     try {
@@ -63,7 +80,48 @@ export default function App() {
     return { startingBankroll: DEFAULT_BANKROLL, unitSize: DEFAULT_UNIT_SIZE };
   });
 
-  // Save to localStorage
+  // Listen to Firebase Auth state
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      setCurrentUser(user);
+      if (user) {
+        setIsCloudSyncActive(true);
+        // Load cloud settings if present
+        const cloudSettings = await fetchCloudSettings(user.uid);
+        if (cloudSettings) {
+          setSettings({
+            startingBankroll: cloudSettings.startingBankroll || DEFAULT_BANKROLL,
+            unitSize: cloudSettings.unitSize || DEFAULT_UNIT_SIZE
+          });
+        }
+
+        // Subscribe to real-time Firestore bets
+        const unsubscribeBets = subscribeToBets(user.uid, (cloudBets) => {
+          if (cloudBets && cloudBets.length > 0) {
+            setBets(cloudBets);
+          } else {
+            // First time cloud user: sync current seed/local bets to Firestore
+            setBets(currentLocal => {
+              if (currentLocal && currentLocal.length > 0) {
+                batchUploadLocalBets(user.uid, currentLocal).catch(console.error);
+              }
+              return currentLocal;
+            });
+          }
+        });
+
+        return () => {
+          unsubscribeBets();
+        };
+      } else {
+        setIsCloudSyncActive(false);
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, []);
+
+  // Save to localStorage as offline fallback
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY_GAMES, JSON.stringify(weeklyGames));
@@ -110,11 +168,19 @@ export default function App() {
       }
       return [savedBet, ...prev];
     });
+
+    // Sync to Cloud Firestore if logged in
+    if (currentUser) {
+      syncBetToCloud(currentUser.uid, savedBet).catch((err) => {
+        console.error('Failed to sync saved bet to Firestore', err);
+      });
+    }
   };
 
   const handleUpdateBetStatus = (id: string, status: BetStatus) => {
-    setBets((prev) =>
-      prev.map((bet) => {
+    setBets((prev) => {
+      let updatedBetToSync: Bet | null = null;
+      const nextBets = prev.map((bet) => {
         if (bet.id !== id) return bet;
 
         let profit: number | undefined = undefined;
@@ -131,18 +197,28 @@ export default function App() {
           payout = bet.stake;
         }
 
-        return {
+        const updated: Bet = {
           ...bet,
           status,
           profit,
           payout
         };
-      })
-    );
+        updatedBetToSync = updated;
+        return updated;
+      });
+
+      if (currentUser && updatedBetToSync) {
+        syncBetToCloud(currentUser.uid, updatedBetToSync).catch(console.error);
+      }
+      return nextBets;
+    });
   };
 
   const handleDeleteBet = (id: string) => {
     setBets((prev) => prev.filter((b) => b.id !== id));
+    if (currentUser) {
+      deleteBetFromCloud(currentUser.uid, id).catch(console.error);
+    }
   };
 
   const handleEditBet = (bet: Bet) => {
@@ -181,6 +257,12 @@ export default function App() {
 
   const handleUpdateBankrollSettings = (startingBankroll: number, unitSize: number) => {
     setSettings({ startingBankroll, unitSize });
+    if (currentUser) {
+      saveCloudSettings(currentUser.uid, { startingBankroll, unitSize }, {
+        email: currentUser.email,
+        displayName: currentUser.displayName
+      }).catch(console.error);
+    }
   };
 
   return (
@@ -193,10 +275,38 @@ export default function App() {
         bankrollSummary={bankrollSummary}
         onOpenAddBet={handleOpenAddBet}
         onUpdateBankrollSettings={handleUpdateBankrollSettings}
+        currentUser={currentUser}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+        {/* Account Sync Status Bar */}
+        <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${currentUser ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></div>
+            <span className="text-slate-300">
+              {currentUser ? (
+                <span>
+                  Connected as <strong className="text-white">{currentUser.displayName || (currentUser.isAnonymous ? 'Guest Account' : currentUser.email)}</strong> &bull; Changes automatically save and sync to Cloud
+                </span>
+              ) : (
+                <span>
+                  Using Local Browser Storage &bull; Sign in to access your bets &amp; bankroll from any device
+                </span>
+              )}
+            </span>
+          </div>
+
+          <button
+            id="btn-quick-account-status"
+            onClick={() => setIsAuthModalOpen(true)}
+            className="text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer underline text-xs"
+          >
+            {currentUser ? 'Manage Cloud Sync' : 'Sign In / Cloud Backup'}
+          </button>
+        </div>
+
         {currentTab === 'weekly' && (
           <WeeklyGameInsights
             games={weeklyGames}
@@ -268,6 +378,14 @@ export default function App() {
         onSaveBet={handleSaveBet}
         unitSize={settings.unitSize}
         initialBetData={betToEdit}
+      />
+
+      {/* Account Access & Cloud Data Sync Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        currentUser={currentUser}
+        localBets={bets}
       />
 
     </div>

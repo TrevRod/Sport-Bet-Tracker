@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with bankroll settings and preferences",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "startingBankroll": { "type": "number" },
+        "unitSize": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "startingBankroll", "unitSize"]
+    },
+    "UserBet": {
+      "title": "UserBet",
+      "description": "Individual sports bet logged by the user with PFF analytics and CLV",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "matchup": { "type": "string" },
+        "teamOrSelection": { "type": "string" },
+        "league": { "type": "string" },
+        "betType": { "type": "string" },
+        "marketLine": { "type": "string" },
+        "odds": { "type": "number" },
+        "stake": { "type": "number" },
+        "units": { "type": "number" },
+        "sportsbook": { "type": "string" },
+        "status": { "type": "string" },
+        "payout": { "type": "number" },
+        "profit": { "type": "number" },
+        "closingLine": { "type": "string" },
+        "closingOdds": { "type": "number" },
+        "clvDifference": { "type": "number" },
+        "pffAdvantageNote": { "type": "string" },
+        "confidenceRating": { "type": "number" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "teamOrSelection", "odds", "stake", "status"]
+    },
+    "UserCustomGame": {
+      "title": "UserCustomGame",
+      "description": "Customized or simulated weekly game state for user session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gameId": { "type": "string" },
+        "week": { "type": "number" },
+        "status": { "type": "string" },
+        "homeScore": { "type": "number" },
+        "awayScore": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "gameId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile with settings"
+    },
+    "/users/{userId}/bets/{betId}": {
+      "schema": "UserBet",
+      "description": "User's saved bets collection"
+    },
+    "/users/{userId}/games/{gameId}": {
+      "schema": "UserCustomGame",
+      "description": "User's game score overrides"
+    }
+  }
+}
