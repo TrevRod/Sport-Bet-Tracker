@@ -52,6 +52,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [unauthorizedDomain, setUnauthorizedDomain] = useState<string | null>(null);
+  const [operationNotAllowedProvider, setOperationNotAllowedProvider] = useState<string | null>(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
 
   if (!isOpen) return null;
@@ -82,6 +83,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       if (err.code === 'auth/unauthorized-domain') {
         setUnauthorizedDomain(currentHost || 'run.app');
         setErrorMsg(null);
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setOperationNotAllowedProvider('Google');
+        setErrorMsg(null);
       } else if (err.code === 'auth/popup-blocked') {
         setErrorMsg('Popup was blocked by your browser. Please allow popups or use email sign in.');
       } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
@@ -107,6 +111,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     setIsLoading(true);
     setErrorMsg(null);
+    setOperationNotAllowedProvider(null);
 
     try {
       if (mode === 'signup') {
@@ -122,7 +127,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }, 1200);
     } catch (err: any) {
       console.error(err);
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+      if (err.code === 'auth/operation-not-allowed') {
+        setOperationNotAllowedProvider('Email/Password');
+        setErrorMsg(null);
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
         setErrorMsg('Invalid email or password.');
       } else if (err.code === 'auth/email-already-in-use') {
         setErrorMsg('This email is already registered. Please click "Sign In" instead.');
@@ -139,6 +147,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleGuestSignIn = async () => {
     setIsLoading(true);
     setErrorMsg(null);
+    setOperationNotAllowedProvider(null);
     try {
       await loginAsGuest();
       setSuccessMsg('Signed in with Temporary Guest Account! Your data is backed up.');
@@ -148,7 +157,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }, 1200);
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(err.message || 'Failed to start guest session.');
+      if (err.code === 'auth/operation-not-allowed') {
+        setOperationNotAllowedProvider('Anonymous');
+        setErrorMsg(null);
+      } else {
+        setErrorMsg(err.message || 'Failed to start guest session.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -249,6 +263,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300 font-medium">
                 👉 <strong>Instant Solution:</strong> Use <strong>Email &amp; Password</strong> or <strong>Guest Login</strong> below — both work immediately without domain authorization!
               </div>
+            </div>
+          )}
+
+          {/* Operation Not Allowed Provider Guide Card */}
+          {operationNotAllowedProvider && (
+            <div className="p-4 bg-amber-950/40 border border-amber-500/50 rounded-xl space-y-3 text-xs text-amber-200">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold text-amber-300">
+                    Enable "{operationNotAllowedProvider}" in Firebase Console
+                  </span>
+                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                    Firebase has disabled this sign-in provider by default. To enable it for your project (<span className="text-emerald-400 font-mono">theta-notch-0vd6f</span>):
+                  </p>
+                </div>
+              </div>
+
+              <ol className="list-decimal list-inside space-y-1 text-[11px] text-slate-300 pl-1">
+                <li>Click the button below to open your Firebase Sign-in methods page</li>
+                <li>Click on <strong className="text-white">{operationNotAllowedProvider}</strong></li>
+                <li>Toggle the switch to <strong className="text-emerald-400">Enable</strong> and click <strong className="text-white">Save</strong></li>
+              </ol>
+
+              <a
+                href="https://console.firebase.google.com/project/theta-notch-0vd6f/authentication/providers"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
+              >
+                <span>Open Firebase Sign-in Providers</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
           )}
 
