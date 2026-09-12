@@ -1,0 +1,6 @@
+{
+  "name": "Sports Betting Tracker & PFF Predictive Analytics",
+  "description": "Track sports betting performance with bankroll analytics, ROI calculations, and predictive game and prop models powered by Pro Football Focus (PFF) metrics and AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
