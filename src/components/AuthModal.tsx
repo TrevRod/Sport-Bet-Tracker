@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   LogOut,
   UploadCloud,
-  DownloadCloud
+  DownloadCloud,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { User } from 'firebase/auth';
 import { 
@@ -49,12 +51,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [unauthorizedDomain, setUnauthorizedDomain] = useState<string | null>(null);
+  const [copiedDomain, setCopiedDomain] = useState(false);
 
   if (!isOpen) return null;
+
+  const currentHost = typeof window !== 'undefined' ? window.location.hostname : '';
+
+  const handleCopyHost = () => {
+    if (currentHost && navigator.clipboard) {
+      navigator.clipboard.writeText(currentHost);
+      setCopiedDomain(true);
+      setTimeout(() => setCopiedDomain(false), 2500);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setErrorMsg(null);
+    setUnauthorizedDomain(null);
     try {
       const user = await loginWithGoogle();
       setSuccessMsg(`Welcome, ${user.displayName || user.email || 'Sharp bettor'}!`);
@@ -64,7 +79,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }, 1200);
     } catch (err: any) {
       console.error(err);
-      if (err.code === 'auth/popup-blocked') {
+      if (err.code === 'auth/unauthorized-domain') {
+        setUnauthorizedDomain(currentHost || 'run.app');
+        setErrorMsg(null);
+      } else if (err.code === 'auth/popup-blocked') {
         setErrorMsg('Popup was blocked by your browser. Please allow popups or use email sign in.');
       } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
         setErrorMsg('Sign-in cancelled.');
@@ -200,6 +218,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Content Body */}
         <div className="p-6 space-y-5">
+          {/* Unauthorized Domain Guide Card */}
+          {unauthorizedDomain && (
+            <div className="p-4 bg-amber-950/40 border border-amber-500/40 rounded-xl space-y-3 text-xs text-amber-200">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold text-amber-300">Firebase Domain Authorization Note</span>
+                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                    Google OAuth popups require adding this preview domain to your Firebase Console under <span className="text-white font-medium">Authentication &gt; Settings &gt; Authorized domains</span>.
+                  </p>
+                </div>
+              </div>
+
+              {/* Hostname with 1-click copy */}
+              <div className="flex items-center justify-between gap-2 p-2 bg-slate-950/80 rounded-lg border border-slate-800">
+                <span className="font-mono text-[10px] text-emerald-400 truncate max-w-[240px]">
+                  {unauthorizedDomain}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyHost}
+                  className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer shrink-0 font-medium"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>{copiedDomain ? 'Copied!' : 'Copy Domain'}</span>
+                </button>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800/40 text-[11px] text-emerald-300 font-medium">
+                👉 <strong>Instant Solution:</strong> Use <strong>Email &amp; Password</strong> or <strong>Guest Login</strong> below — both work immediately without domain authorization!
+              </div>
+            </div>
+          )}
+
           {/* Status Message Banners */}
           {errorMsg && (
             <div className="p-3 bg-red-950/40 border border-red-800/60 rounded-xl flex items-start gap-2 text-xs text-red-200">
