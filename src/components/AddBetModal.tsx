@@ -39,7 +39,7 @@ export const AddBetModal: React.FC<AddBetModalProps> = ({
   unitSize,
   initialBetData
 }) => {
-  const [matchup, setMatchup] = useState(initialBetData?.matchup || 'KC @ BAL');
+  const [matchup, setMatchup] = useState(initialBetData?.matchup || 'DEN @ KC');
   const [teamOrSelection, setTeamOrSelection] = useState(initialBetData?.teamOrSelection || '');
   const [betType, setBetType] = useState<BetType>(initialBetData?.betType || 'spread');
   const [marketLine, setMarketLine] = useState(initialBetData?.marketLine || '');
@@ -180,7 +180,7 @@ export const AddBetModal: React.FC<AddBetModalProps> = ({
                   type="text"
                   value={matchup}
                   onChange={(e) => setMatchup(e.target.value)}
-                  placeholder="e.g. KC @ BAL, DET @ SF"
+                  placeholder="e.g. DEN @ KC, BUF @ HOU"
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 font-medium"
                   required
                 />

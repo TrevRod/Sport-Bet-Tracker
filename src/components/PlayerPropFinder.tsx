@@ -34,7 +34,7 @@ const PROP_EDGES: PropItem[] = [
     player: 'Amon-Ra St. Brown',
     position: 'WR',
     team: 'DET',
-    opponent: 'SF',
+    opponent: 'NO',
     propType: 'Receiving Yards',
     marketLine: 78.5,
     recommendation: 'OVER',
@@ -42,15 +42,15 @@ const PROP_EDGES: PropItem[] = [
     modelProjection: 94.2,
     edgePercentage: 11.4,
     playerPffGrade: 91.2,
-    oppGrade: 68.4,
-    pffAdvantageDetail: 'Faces 49ers backup slot CB (68.4 PFF coverage grade). St. Brown commands a 29.4% target share in dome games with +2.8 YPRR.'
+    oppGrade: 74.5,
+    pffAdvantageDetail: 'Faces Saints nickel secondary without Marshon Lattimore. St. Brown commands a 29.4% target share in Ford Field dome games with +2.8 YPRR.'
   },
   {
     id: 'prop-2',
     player: 'Saquon Barkley',
     position: 'RB',
     team: 'PHI',
-    opponent: 'GB',
+    opponent: 'WAS',
     propType: 'Rushing Yards',
     marketLine: 82.5,
     recommendation: 'OVER',
@@ -58,31 +58,31 @@ const PROP_EDGES: PropItem[] = [
     modelProjection: 98.6,
     edgePercentage: 12.8,
     playerPffGrade: 91.5,
-    oppGrade: 74.2,
-    pffAdvantageDetail: 'Eagles OL ranks #2 in PFF run-blocking (88.6) against Packers light-box 2-high defensive front (74.2 run stop grade).'
+    oppGrade: 78.4,
+    pffAdvantageDetail: 'Eagles OL ranks #2 in PFF run-blocking (88.6) against Commanders light-box 2-high defensive front (78.4 run stop grade).'
   },
   {
     id: 'prop-3',
     player: 'Patrick Mahomes',
     position: 'QB',
     team: 'KC',
-    opponent: 'BAL',
+    opponent: 'DEN',
     propType: 'Passing Yards',
-    marketLine: 264.5,
+    marketLine: 258.5,
     recommendation: 'OVER',
     odds: -112,
-    modelProjection: 284.0,
-    edgePercentage: 7.9,
+    modelProjection: 279.4,
+    edgePercentage: 8.1,
     playerPffGrade: 91.4,
-    oppGrade: 81.0,
-    pffAdvantageDetail: 'Mahomes has a 93.2 clean-pocket rating. With KC pass block grade at 84.6, Baltimore blitz rate falls into high-EPA checkdowns.'
+    oppGrade: 84.1,
+    pffAdvantageDetail: 'Monday Night Football showcase. Chiefs pass protection grade (84.6) gives Mahomes clean-pocket execution to hit intermediate seams.'
   },
   {
     id: 'prop-4',
     player: 'Josh Jacobs',
     position: 'RB',
     team: 'GB',
-    opponent: 'PHI',
+    opponent: 'MIN',
     propType: 'Rushing Yards',
     marketLine: 71.5,
     recommendation: 'UNDER',
@@ -90,8 +90,8 @@ const PROP_EDGES: PropItem[] = [
     modelProjection: 61.0,
     edgePercentage: 9.1,
     playerPffGrade: 88.1,
-    oppGrade: 86.1,
-    pffAdvantageDetail: 'Eagles defensive tackle duo (Jalen Carter / Jordan Davis) holds an 86.1 run-defense grade; GB projected negative game script.'
+    oppGrade: 85.2,
+    pffAdvantageDetail: 'Vikings Brian Flores defense holds an 85.2 run-defense grade and #1 interior run-stop efficiency in division clashes.'
   },
   {
     id: 'prop-5',
@@ -107,14 +107,14 @@ const PROP_EDGES: PropItem[] = [
     edgePercentage: 10.5,
     playerPffGrade: 91.8,
     oppGrade: 78.5,
-    pffAdvantageDetail: 'Collins leads the AFC in yards per route run (3.12). Buffalo outside CBs allow 12.8 yards per target on intermediate digs.'
+    pffAdvantageDetail: 'Collins leads the AFC in yards per route run (3.12). Buffalo outside boundary coverage allows 12.8 yards per target on intermediate digs.'
   },
   {
     id: 'prop-6',
     player: 'Lamar Jackson',
     position: 'QB',
     team: 'BAL',
-    opponent: 'KC',
+    opponent: 'IND',
     propType: 'Rushing Yards',
     marketLine: 49.5,
     recommendation: 'OVER',
@@ -122,8 +122,8 @@ const PROP_EDGES: PropItem[] = [
     modelProjection: 62.4,
     edgePercentage: 14.2,
     playerPffGrade: 92.8,
-    oppGrade: 82.1,
-    pffAdvantageDetail: 'KC plays high frequency of 2-man under coverage with DB backs turned, leaving open scrambles for Jackson (90.4 rushing grade).'
+    oppGrade: 78.4,
+    pffAdvantageDetail: 'Colts play high frequency of zone match coverage inside Lucas Oil dome, leaving open scramble lanes for Jackson (90.4 rushing grade).'
   }
 ];
 

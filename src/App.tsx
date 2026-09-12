@@ -17,9 +17,9 @@ import {
   DEFAULT_UNIT_SIZE 
 } from './utils/betCalculations';
 
-const STORAGE_KEY_BETS = 'pff_sharp_bets_v2';
-const STORAGE_KEY_SETTINGS = 'pff_bankroll_settings_v2';
-const STORAGE_KEY_GAMES = 'pff_sharp_weekly_games_v2';
+const STORAGE_KEY_BETS = 'pff_sharp_bets_2026';
+const STORAGE_KEY_SETTINGS = 'pff_bankroll_settings_2026';
+const STORAGE_KEY_GAMES = 'pff_sharp_weekly_games_2026';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<'weekly' | 'tracker' | 'predict' | 'props' | 'analytics' | 'teams'>('weekly');
